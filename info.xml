@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<extension key="uk.org.bec.custom" type="module">
+  <file>custombec</file>
+  <name>BEC Customisations</name>
+  <description>Implements customisations for BEC such as tokens</description>
+  <license>AGPL-3.0</license>
+  <maintainer>
+    <author>Various</author>
+    <email>mjw@mjwconsult.co.uk</email>
+  </maintainer>
+  <urls>
+    <url desc="Support">https://www.mjwconsult.co.uk</url>
+    <url desc="Licensing">http://www.gnu.org/licenses/agpl-3.0.html</url>
+  </urls>
+  <releaseDate>2017-10-07</releaseDate>
+  <version>0.1</version>
+  <develStage>alpha</develStage>
+  <compatibility>
+    <ver>4.7</ver>
+  </compatibility>
+  <comments></comments>
+  <civix>
+    <namespace>CRM/Bec</namespace>
+  </civix>
+</extension>
