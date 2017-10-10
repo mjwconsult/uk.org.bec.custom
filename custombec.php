@@ -291,6 +291,10 @@ function custombec_civicrm_buildAmount($pageType, &$form, &$amount) {
           continue;
         }
         foreach ($fee['options'] as &$option) {
+          if (($option['name'] == 'Ordinary_Under_21_NUS')
+             || ($option['name'] == 'Probationary_Under_21_NUS_discount')) {
+            continue;
+          }
           // We only have one amount for each membership, so this code may be overkill,
           // as it checks every option displayed (and there is only one).
           if ($option['amount'] > 0) {
