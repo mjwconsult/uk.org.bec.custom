@@ -3,6 +3,8 @@
 require_once 'custombec.civix.php';
 use CRM_custombec_ExtensionUtil as E;
 
+const MEMTYPE_STUDENTDISCOUNT = 15;
+
 /**
  * Implements hook_civicrm_config().
  *
@@ -210,8 +212,8 @@ FROM   civicrm_membership
        LEFT JOIN civicrm_membership_type ON civicrm_membership.membership_type_id=civicrm_membership_type.id
 
 WHERE  contact_id IN ( $contactIDString )
-	AND civicrm_membership.membership_type_id = 15
-AND    is_test = 0                                                                                                                          
+	AND civicrm_membership.membership_type_id = " . MEMTYPE_STUDENTDISCOUNT . "
+ AND    is_test = 0                                                                                                                          
 GROUP BY contact_id                                                                                                                         
 ";
 
@@ -231,5 +233,78 @@ GROUP BY contact_id
     $value['membership.Student_fee'  ] = $dao->minimum_fee;
     $value['membership.Total_fee'  ] += $dao->minimum_fee;
     $value['membership.Total_fee'  ] += 100;
+  }
+}
+
+/**
+ * Calculate reduced price for students on renewal
+ * @param $pageType
+ * @param $form
+ * @param $amount
+ */
+function custombec_civicrm_buildAmount($pageType, &$form, &$amount) {
+  // Check if we have a contact Id
+  $contactId = $form->_contactID;
+
+  if (empty($contactId)) {
+    return;
+  }
+
+  // Check if that contact has a membership of type 15 (student discount)
+  $studentMembership = civicrm_api3('Membership', 'get', array(
+    'membership_type_id' => MEMTYPE_STUDENTDISCOUNT,
+    'contact_id' => $contactId,
+  ));
+  if ($studentMembership['count'] == 0) {
+    return;
+  }
+
+  // Got a student membership
+  $membershipType = civicrm_api3('MembershipType', 'get', array(
+    'id' => MEMTYPE_STUDENTDISCOUNT,
+  ));
+  if ($membershipType['count'] == 0) {
+    return;
+  }
+  $studentDiscount = $membershipType['values'][MEMTYPE_STUDENTDISCOUNT]['minimum_fee'];
+
+  if ($studentDiscount > 0) {
+    return;
+  }
+
+  //sample to modify priceset fee
+  $priceSetId = $form->get('priceSetId');
+  if (!empty($priceSetId)) {
+    $feeBlock = &$amount;
+    if (!is_array($feeBlock) || empty($feeBlock)) {
+      return;
+    }
+
+    if ($pageType == 'membership') {
+      // Apply student discount
+
+      foreach ($feeBlock as &$fee) {
+        if ($fee['name'] !== 'BEC_Membership') {
+          continue;
+        }
+        if (!is_array($fee['options'])) {
+          continue;
+        }
+        foreach ($fee['options'] as &$option) {
+          // We only have one amount for each membership, so this code may be overkill,
+          // as it checks every option displayed (and there is only one).
+          if ($option['amount'] > 0) {
+            // Only pro-rata paid memberships!
+            $option['amount'] = $option['amount'] + $studentDiscount;
+            if ($option['amount'] < 0) {
+              $option['amount'] = 0;
+            }
+            $option['label'] .= ' - Student Discount';
+          }
+        }
+      }
+      // Set this as well otherwise it won't apply on confirmation page
+      $form->_priceSet['fields'] = $feeBlock;
+    }
   }
 }
