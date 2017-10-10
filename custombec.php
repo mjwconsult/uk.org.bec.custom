@@ -254,7 +254,7 @@ function custombec_civicrm_buildAmount($pageType, &$form, &$amount) {
   try {
     $studentMembership = civicrm_api3('Membership', 'get', array(
       'membership_type_id' => MEMTYPE_STUDENTDISCOUNT,
-      'status_id' => array("New", "Current", "Grace"),
+      'status_id' => array('IN' => array("New", "Current", "Grace")),
       'contact_id' => $contactId,
     ));
   }
