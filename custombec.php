@@ -253,6 +253,7 @@ function custombec_civicrm_buildAmount($pageType, &$form, &$amount) {
   // Check if that contact has a membership of type 15 (student discount)
   $studentMembership = civicrm_api3('Membership', 'get', array(
     'membership_type_id' => MEMTYPE_STUDENTDISCOUNT,
+    'status_id' => array("New", "Current", "Grace"),
     'contact_id' => $contactId,
   ));
   if ($studentMembership['count'] == 0) {
