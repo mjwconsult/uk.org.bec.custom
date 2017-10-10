@@ -251,11 +251,16 @@ function custombec_civicrm_buildAmount($pageType, &$form, &$amount) {
   }
 
   // Check if that contact has a membership of type 15 (student discount)
-  $studentMembership = civicrm_api3('Membership', 'get', array(
-    'membership_type_id' => MEMTYPE_STUDENTDISCOUNT,
-    'status_id' => array("New", "Current", "Grace"),
-    'contact_id' => $contactId,
-  ));
+  try {
+    $studentMembership = civicrm_api3('Membership', 'get', array(
+      'membership_type_id' => MEMTYPE_STUDENTDISCOUNT,
+      'status_id' => array("New", "Current", "Grace"),
+      'contact_id' => $contactId,
+    ));
+  }
+  catch (Exception $e) {
+    return;
+  }
   if ($studentMembership['count'] == 0) {
     return;
   }
@@ -311,5 +316,13 @@ function custombec_civicrm_buildAmount($pageType, &$form, &$amount) {
       // Set this as well otherwise it won't apply on confirmation page
       $form->_priceSet['fields'] = $feeBlock;
     }
+  }
+}
+
+function custombec_civicrm_buildForm($formName, &$form) {
+  switch ($formName) {
+    case 'CRM_Contribute_Form_Contribution_Main':
+      CRM_Core_Resources::singleton()->addScriptFile('uk.org.bec.custom', 'js/contribution' . $form->_id . '.js');
+      break;
   }
 }
