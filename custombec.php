@@ -232,7 +232,6 @@ GROUP BY contact_id
     $value['membership.Student_start_date'  ] = $dao->start_date;
     $value['membership.Student_fee'  ] = $dao->minimum_fee;
     $value['membership.Total_fee'  ] += $dao->minimum_fee;
-    $value['membership.Total_fee'  ] += 100;
   }
 }
 
