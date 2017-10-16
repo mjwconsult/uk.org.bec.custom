@@ -323,7 +323,6 @@ function custombec_civicrm_buildAmount($pageType, &$form, &$amount) {
             }
           }
           if (!$match) {
-            unset($option);
             continue;
           }
 
@@ -337,7 +336,9 @@ function custombec_civicrm_buildAmount($pageType, &$form, &$amount) {
             }
             $option['label'] .= ' - Student Discount';
           }
+          $filteredOptions[] = $option;
         }
+        $fee['options'] = $filteredOptions;
       }
       // Set this as well otherwise it won't apply on confirmation page
       $form->_priceSet['fields'] = $feeBlock;
