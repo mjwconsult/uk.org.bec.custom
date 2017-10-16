@@ -272,9 +272,22 @@ function custombec_civicrm_buildAmount($pageType, &$form, &$amount) {
     return;
   }
   $studentDiscount = $membershipType['values'][MEMTYPE_STUDENTDISCOUNT]['minimum_fee'];
-
+  // Only allow negative amounts for student discount
   if ($studentDiscount > 0) {
     return;
+  }
+
+  // Get list of current memberships
+  $memberships = civicrm_api3('Membership', 'get', array(
+    'contact_id' => $contactId,
+  ));
+  if (empty($memberships['count'])) {
+    Civi::log()->debug('No memberships for contact id: ' . $contactId);
+  }
+
+  $membershipNames = array();
+  foreach ($memberships['values'] as $membership) {
+    $membershipNames[] = $membership['membership_name'];
   }
 
   //sample to modify priceset fee
@@ -300,6 +313,20 @@ function custombec_civicrm_buildAmount($pageType, &$form, &$amount) {
              || ($option['name'] == 'Probationary_Under_21_NUS_discount')) {
             continue;
           }
+
+          // Check if we already have a membership of this type, don't allow selection if not.
+          $match = FALSE;
+          foreach ($membershipNames as $membershipName) {
+            if ($option['name'] === $membershipName) {
+              $match = TRUE;
+              break;
+            }
+          }
+          if (!$match) {
+            unset($option);
+            continue;
+          }
+
           // We only have one amount for each membership, so this code may be overkill,
           // as it checks every option displayed (and there is only one).
           if ($option['amount'] > 0) {
