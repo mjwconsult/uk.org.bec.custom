@@ -213,6 +213,7 @@ FROM   civicrm_membership
 
 WHERE  contact_id IN ( $contactIDString )
 	AND civicrm_membership.membership_type_id = " . MEMTYPE_STUDENTDISCOUNT . "
+	AND civicrm_membership.status_id IN (1,2)
  AND    is_test = 0                                                                                                                          
 GROUP BY contact_id                                                                                                                         
 ";
