@@ -203,6 +203,12 @@ GROUP BY contact_id
     $value['membership.Total_fee'  ] += $dao->minimum_fee;
   }
   //  ------------------------------------round 3 --------------------------------------------------------------
+  //
+  //  intial the values so they don't drag thu
+  $value['membership.Student_mem_name'] = "";
+  $value['membership.Student_start_date'  ] = "";
+  $value['membership.Student_fee'  ] = "";
+
   $query = "                                                                                                                              
 SELECT contact_id,                                                                                                                          
        civicrm_membership_type.name,                                                                                                                  
