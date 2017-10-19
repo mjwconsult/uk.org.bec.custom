@@ -249,6 +249,10 @@ GROUP BY contact_id
  * @param $amount
  */
 function custombec_civicrm_buildAmount($pageType, &$form, &$amount) {
+  // Initialise
+  $studentDiscount = 0;
+  $membershipNames = array();
+
   // Check if we have a contact Id
   $contactId = $form->_contactID;
 
@@ -257,31 +261,25 @@ function custombec_civicrm_buildAmount($pageType, &$form, &$amount) {
   }
 
   // Check if that contact has a membership of type 15 (student discount)
-  try {
-    $studentMembership = civicrm_api3('Membership', 'get', array(
-      'membership_type_id' => MEMTYPE_STUDENTDISCOUNT,
-      'status_id' => array('IN' => array("New", "Current", "Grace")),
-      'contact_id' => $contactId,
+  $studentMembership = civicrm_api3('Membership', 'get', array(
+    'membership_type_id' => MEMTYPE_STUDENTDISCOUNT,
+    'status_id' => array('IN' => array("New", "Current", "Grace")),
+    'contact_id' => $contactId,
+  ));
+  if ($studentMembership['count'] > 0) {
+    // Contact has a student discount membership
+    // Get the amount of the student discount
+    $membershipType = civicrm_api3('MembershipType', 'get', array(
+      'id' => MEMTYPE_STUDENTDISCOUNT,
     ));
-  }
-  catch (Exception $e) {
-    return;
-  }
-  if ($studentMembership['count'] == 0) {
-    return;
+    if ($membershipType['count'] > 0) {
+      $studentDiscount = $membershipType['values'][MEMTYPE_STUDENTDISCOUNT]['minimum_fee'];
+    }
   }
 
-  // Got a student membership
-  $membershipType = civicrm_api3('MembershipType', 'get', array(
-    'id' => MEMTYPE_STUDENTDISCOUNT,
-  ));
-  if ($membershipType['count'] == 0) {
-    return;
-  }
-  $studentDiscount = $membershipType['values'][MEMTYPE_STUDENTDISCOUNT]['minimum_fee'];
   // Only allow negative amounts for student discount
   if ($studentDiscount > 0) {
-    return;
+    $studentDiscount = 0;
   }
 
   // Get list of current memberships
@@ -292,7 +290,7 @@ function custombec_civicrm_buildAmount($pageType, &$form, &$amount) {
     Civi::log()->debug('No memberships for contact id: ' . $contactId);
   }
 
-  $membershipNames = array();
+  // Set array of membership names for contact
   foreach ($memberships['values'] as $membership) {
     $membershipNames[] = $membership['membership_name'];
   }
@@ -315,12 +313,8 @@ function custombec_civicrm_buildAmount($pageType, &$form, &$amount) {
         if (!is_array($fee['options'])) {
           continue;
         }
+        $filteredOptions = array();
         foreach ($fee['options'] as &$option) {
-          if (($option['name'] == 'Ordinary_Under_21_NUS')
-             || ($option['name'] == 'Probationary_Under_21_NUS_discount')) {
-            continue;
-          }
-
           // Check if we already have a membership of this type, don't allow selection if not.
           $match = FALSE;
           foreach ($membershipNames as $membershipName) {
@@ -329,20 +323,21 @@ function custombec_civicrm_buildAmount($pageType, &$form, &$amount) {
               break;
             }
           }
+
           if (!$match) {
+            // Contact doesn't have membership of this type, don't allow selection
             continue;
           }
 
-          // We only have one amount for each membership, so this code may be overkill,
-          // as it checks every option displayed (and there is only one).
-          if ($option['amount'] > 0) {
-            // Only pro-rata paid memberships!
+          // Apply student discount if they have one
+          if (($option['amount'] > 0) && ($studentDiscount < 0)) {
             $option['amount'] = $option['amount'] + $studentDiscount;
             if ($option['amount'] < 0) {
               $option['amount'] = 0;
             }
             $option['label'] .= ' - Student Discount';
           }
+          // Add membership option to list
           $filteredOptions[] = $option;
         }
         $fee['options'] = $filteredOptions;
