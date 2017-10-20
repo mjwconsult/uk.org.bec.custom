@@ -307,7 +307,7 @@ function custombec_civicrm_buildAmount($pageType, &$form, &$amount) {
       // Apply student discount
 
       foreach ($feeBlock as &$fee) {
-        if ($fee['name'] !== 'BEC_Membership') {
+        if (strtolower($fee['name']) !== 'bec_membership') {
           continue;
         }
         if (!is_array($fee['options'])) {
@@ -326,7 +326,13 @@ function custombec_civicrm_buildAmount($pageType, &$form, &$amount) {
 
           if (!$match) {
             // Contact doesn't have membership of this type, don't allow selection
+            $option = NULL; // Don't remove the option or it breaks! But we can set it to NULL
             continue;
+          }
+          if (!$match) {
+            $option['is_active'] = 0;
+            $option['visibility_id'] = 0;
+
           }
 
           // Apply student discount if they have one
@@ -337,12 +343,9 @@ function custombec_civicrm_buildAmount($pageType, &$form, &$amount) {
             }
             $option['label'] .= ' - Student Discount';
           }
-          // Add membership option to list
-          $filteredOptions[] = $option;
         }
-        $fee['options'] = $filteredOptions;
       }
-      // Set this as well otherwise it won't apply on confirmation page
+      // Set this so changes are applied on confirmation page
       $form->_priceSet['fields'] = $feeBlock;
     }
   }
