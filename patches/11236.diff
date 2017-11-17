@@ -1,0 +1,13 @@
+diff --git a/CRM/Utils/System/Joomla.php b/CRM/Utils/System/Joomla.php
+index 2b356ad26b0..526438f4dff 100644
+--- a/CRM/Utils/System/Joomla.php
++++ b/CRM/Utils/System/Joomla.php
+@@ -264,7 +264,7 @@ public function url(
+ 
+     if ($config->userFrameworkFrontend) {
+       $script = 'index.php';
+-      if (JRequest::getVar("Itemid")) {
++      if (JRequest::getVar("Itemid") && (strpos($path, 'civicrm/payment/ipn') === FALSE)) {
+         $Itemid = "{$separator}Itemid=" . JRequest::getVar("Itemid");
+       }
+     }
