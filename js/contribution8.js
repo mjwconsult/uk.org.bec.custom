@@ -6,4 +6,7 @@ CRM.$(function($) {
   bcaMembership.select2().enable(true);
   becMembership.select2({width: '75%'});
   bcaMembership.select2({width: '75%'});
+
+  CRM.$('#force_renew').show();
+  CRM.$('#auto_renew').prop('checked', 1);
 });
