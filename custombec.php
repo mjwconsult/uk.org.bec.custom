@@ -125,15 +125,16 @@ function custombec_civicrm_alterSettingsFolders(&$metaDataFolders = NULL) {
   _custombec_civix_civicrm_alterSettingsFolders($metaDataFolders);
 }
 
-function custombec_civicrm_tokens( &$tokens ) {
+function custombec_civicrm_tokens(&$tokens) {
   $tokens['membership'] = array( 'membership.BEC_mem_name', 'membership.BEC_fee','membership.BEC_start_date', 'membership.BCA_mem_name', 'membership.BCA_fee', 'membership.BCA_start_date','membership.Student_mem_name', 'membership.Student_fee', 'membership.Student_start_date', 'membership.Total_fee' );
 }
 
-function custombec_civicrm_tokenValues( &$values, &$contactIDs ) {
-  if ( is_array( $contactIDs ) ) {
-    $contactIDString = implode( ',', array_values( $contactIDs ) );
+function custombec_civicrm_tokenValues(&$values, &$contactIDs) {
+  if (is_array($contactIDs)) {
+    $contactIDString = implode(',', array_values($contactIDs));
     $single = false;
-  } else {
+  }
+  else {
     $contactIDString = "( $contactIDs )";
     $single = true;
   }
@@ -154,21 +155,22 @@ WHERE  contact_id IN ( $contactIDString )
 ORDER BY end_date DESC                                                                                                                       
 ";
 
-  $dao = CRM_Core_DAO::executeQuery( $query );
-  while ( $dao->fetch( ) ) {
-    if ( $single ) {
+  $dao = CRM_Core_DAO::executeQuery($query);
+  while ($dao->fetch()) {
+    if ($single) {
       $value =& $values;
-    } else {
-      if ( ! array_key_exists( $dao->contact_id, $values ) ) {
-        $values[$dao->contact_id] = array( );
+    }
+    else {
+      if (!array_key_exists( $dao->contact_id, $values)) {
+        $values[$dao->contact_id] = array();
       }
       $value =& $values[$dao->contact_id];
     }
 
     $value['membership.BEC_mem_name'] = $dao->name;
-    $value['membership.start_date'  ] = $dao->start_date;
-    $value['membership.BEC_fee'  ] = $dao->minimum_fee;
-    $value['membership.Total_fee'  ] = $dao->minimum_fee;
+    $value['membership.start_date'] = $dao->start_date;
+    $value['membership.BEC_fee'] = $dao->minimum_fee;
+    $value['membership.Total_fee'] = $dao->minimum_fee;
   }
 
   //  ------------------------------------round 2 --------------------------------------------------------------
@@ -186,28 +188,29 @@ AND    is_test = 0
 GROUP BY contact_id                                                                                                                         
 ";
 
-  $dao = CRM_Core_DAO::executeQuery( $query );
-  while ( $dao->fetch( ) ) {
-    if ( $single ) {
+  $dao = CRM_Core_DAO::executeQuery($query);
+  while ($dao->fetch()) {
+    if ($single) {
       $value =& $values;
-    } else {
-      if ( ! array_key_exists( $dao->contact_id, $values ) ) {
-        $values[$dao->contact_id] = array( );
+    }
+    else {
+      if (!array_key_exists($dao->contact_id, $values)) {
+        $values[$dao->contact_id] = array();
       }
       $value =& $values[$dao->contact_id];
     }
 
     $value['membership.BCA_mem_name'] = $dao->name;
-    $value['membership.BCA_start_date'  ] = $dao->start_date;
-    $value['membership.BCA_fee'  ] = $dao->minimum_fee;
-    $value['membership.Total_fee'  ] += $dao->minimum_fee;
+    $value['membership.BCA_start_date'] = $dao->start_date;
+    $value['membership.BCA_fee'] = $dao->minimum_fee;
+    $value['membership.Total_fee'] += $dao->minimum_fee;
   }
+
   //  ------------------------------------round 3 --------------------------------------------------------------
-  //
-  //  intial the values so they don't drag thu
+  //  initialise the values so they don't drag through
   $value['membership.Student_mem_name'] = "";
-  $value['membership.Student_start_date'  ] = "";
-  $value['membership.Student_fee'  ] = "";
+  $value['membership.Student_start_date'] = "";
+  $value['membership.Student_fee'] = "";
 
   $query = "                                                                                                                              
 SELECT contact_id,                                                                                                                          
@@ -224,22 +227,29 @@ WHERE  contact_id IN ( $contactIDString )
 GROUP BY contact_id                                                                                                                         
 ";
 
-  $dao = CRM_Core_DAO::executeQuery( $query );
-  while ( $dao->fetch( ) ) {
-    if ( $single ) {
+  $dao = CRM_Core_DAO::executeQuery($query);
+  while ($dao->fetch()) {
+    if ($single) {
       $value =& $values;
-    } else {
-      if ( ! array_key_exists( $dao->contact_id, $values ) ) {
-        $values[$dao->contact_id] = array( );
+    }
+    else {
+      if (!array_key_exists($dao->contact_id, $values)) {
+        $values[$dao->contact_id] = array();
       }
       $value =& $values[$dao->contact_id];
     }
 
     $value['membership.Student_mem_name'] = $dao->name;
-    $value['membership.Student_start_date'  ] = $dao->start_date;
-    $value['membership.Student_fee'  ] = $dao->minimum_fee;
-    $value['membership.Total_fee'  ] += $dao->minimum_fee;
+    $value['membership.Student_start_date'] = $dao->start_date;
+    $value['membership.Student_fee'] = $dao->minimum_fee;
+    $value['membership.Total_fee'] += $dao->minimum_fee;
   }
+
+  // Formatting (eg. £12.00)
+  $value['membership.BEC_fee'] = CRM_Utils_Money::format($value['membership.BEC_fee']);
+  $value['membership.BCA_fee'] = CRM_Utils_Money::format($value['membership.BCA_fee']);
+  $value['membership.Student_fee'] = CRM_Utils_Money::format($value['membership.Student_fee']);
+  $value['membership.Total_fee'] += CRM_Utils_Money::format($value['membership.Total_fee']);
 }
 
 /**
@@ -247,6 +257,8 @@ GROUP BY contact_id
  * @param $pageType
  * @param $form
  * @param $amount
+ *
+ * @throws \CiviCRM_API3_Exception
  */
 function custombec_civicrm_buildAmount($pageType, &$form, &$amount) {
   // Initialise
