@@ -126,7 +126,18 @@ function custombec_civicrm_alterSettingsFolders(&$metaDataFolders = NULL) {
 }
 
 function custombec_civicrm_tokens(&$tokens) {
-  $tokens['membership'] = array( 'membership.BEC_mem_name', 'membership.BEC_fee','membership.BEC_start_date', 'membership.BCA_mem_name', 'membership.BCA_fee', 'membership.BCA_start_date','membership.Student_mem_name', 'membership.Student_fee', 'membership.Student_start_date', 'membership.Total_fee' );
+  $tokens['membership'] = [
+    'membership.BEC_mem_name',
+    'membership.BEC_fee',
+    'membership.BEC_start_date',
+    'membership.BCA_mem_name',
+    'membership.BCA_fee',
+    'membership.BCA_start_date',
+    'membership.Student_mem_name',
+    'membership.Student_fee',
+    'membership.Student_start_date',
+    'membership.Total_fee',
+  ];
 }
 
 function custombec_civicrm_tokenValues(&$values, &$contactIDs) {
@@ -158,13 +169,13 @@ ORDER BY end_date DESC
   $dao = CRM_Core_DAO::executeQuery($query);
   while ($dao->fetch()) {
     if ($single) {
-      $value =& $values;
+      $value = &$values;
     }
     else {
       if (!array_key_exists( $dao->contact_id, $values)) {
         $values[$dao->contact_id] = array();
       }
-      $value =& $values[$dao->contact_id];
+      $value = &$values[$dao->contact_id];
     }
 
     $value['membership.BEC_mem_name'] = $dao->name;
@@ -173,7 +184,7 @@ ORDER BY end_date DESC
     $value['membership.Total_fee'] = $dao->minimum_fee;
   }
 
-  //  ------------------------------------round 2 --------------------------------------------------------------
+  // Now retrieve New,Current,Grace BCA memberships
   $query = "                                                                                                                              
 SELECT contact_id,                                                                                                                          
        civicrm_membership_type.name,                                                                                                                  
@@ -183,7 +194,8 @@ FROM   civicrm_membership
        LEFT JOIN civicrm_membership_type ON civicrm_membership.membership_type_id=civicrm_membership_type.id
 
 WHERE  contact_id IN ( $contactIDString )
-	AND civicrm_membership.membership_type_id IN (9,10,11,12)
+  AND civicrm_membership.membership_type_id IN (9,10,11,12)
+  AND civicrm_membership.status_id IN (1,2,3)
 AND    is_test = 0                                                                                                                          
 GROUP BY contact_id                                                                                                                         
 ";
@@ -191,13 +203,13 @@ GROUP BY contact_id
   $dao = CRM_Core_DAO::executeQuery($query);
   while ($dao->fetch()) {
     if ($single) {
-      $value =& $values;
+      $value = &$values;
     }
     else {
       if (!array_key_exists($dao->contact_id, $values)) {
         $values[$dao->contact_id] = array();
       }
-      $value =& $values[$dao->contact_id];
+      $value = &$values[$dao->contact_id];
     }
 
     $value['membership.BCA_mem_name'] = $dao->name;
@@ -230,13 +242,13 @@ GROUP BY contact_id
   $dao = CRM_Core_DAO::executeQuery($query);
   while ($dao->fetch()) {
     if ($single) {
-      $value =& $values;
+      $value = &$values;
     }
     else {
       if (!array_key_exists($dao->contact_id, $values)) {
         $values[$dao->contact_id] = array();
       }
-      $value =& $values[$dao->contact_id];
+      $value = &$values[$dao->contact_id];
     }
 
     $value['membership.Student_mem_name'] = $dao->name;
