@@ -1,7 +1,7 @@
 <?php
 
 require_once 'custombec.civix.php';
-use CRM_custombec_ExtensionUtil as E;
+use CRM_Bec_ExtensionUtil as E;
 
 const MEMTYPE_STUDENTDISCOUNT = 15;
 
